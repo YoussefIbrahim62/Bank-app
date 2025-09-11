@@ -177,7 +177,12 @@ namespace AllLibs
 	}
 
 
-
+	void CustomPause(string message = "Press any key to continue...")
+	{
+		cout << "\n" << message;
+		cin.ignore();
+		cin.get();  
+	}
 
 
 }
