@@ -1,0 +1,5 @@
+﻿  Project (5) Simple Bank app.cpp
+D:\My Projects\Project (5) Simple Bank app\MySideFunctionsLib.h(134,27): warning C4267: '=': conversion from 'size_t' to 'short', possible loss of data
+  (compiling source file 'Project%20(5)%20Simple%20Bank%20app.cpp')
+  
+  Project (5) Simple Bank app.vcxproj -> D:\My Projects\Project (5) Simple Bank app\x64\Debug\Project (5) Simple Bank app.exe

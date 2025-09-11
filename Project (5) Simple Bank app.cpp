@@ -1,8 +1,14 @@
 
+#include "MySideFunctionsLib.h"
 
-#include <iostream>
+using namespace AllLibs;
+
 
 int main()
 {
-    std::cout << "Hello World!\n";
+
+	cout << AskUserToGetBackToMainMenu();
+
+
 }
+ 

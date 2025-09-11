@@ -125,6 +125,9 @@
   <ItemGroup>
     <ClCompile Include="Project (5) Simple Bank app.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MySideFunctionsLib.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
