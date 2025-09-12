@@ -47,13 +47,33 @@ namespace AllLibs
 	}
 
 
+	float validateInputIsNumberfloat(string Message)
+	{
+		float Number;
+
+		cout << Message << " ";
+		cin >> Number;
+
+		while (cin.fail())
+		{
+			cin.clear();
+			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			cout << "\n\nInvalid input, please try again:  ";
+
+			cin >> Number;
+		}
+
+		return Number;
+	}
+
+
 	string ReadString(string Message)
 	{
 		string input;
 
 
 		cout << Message << " : ";
-		getline(cin,input);
+		getline(cin >> ws,input);
 
 		return input;
 	}
@@ -123,6 +143,23 @@ namespace AllLibs
 	}
 
 
+	void AddSingleRecordToFile(string fileName, string Record)
+	{
+		fstream File;
+
+		File.open(fileName, ios::out | ios::app);
+
+		if (File.is_open())
+		{
+			if (Record != "")
+				File << Record << "\n";
+
+			File.close();
+		}
+
+	}
+
+
 	vector<string> SplitString(string input, string delim = " ")
 	{
 		vector<string> vWords;
@@ -175,14 +212,5 @@ namespace AllLibs
 	{
 		return ReadAnswerYesOrNO("\nDo you want to get back to main menu [Y] [N] ? ");
 	}
-
-
-	void CustomPause(string message = "Press any key to continue...")
-	{
-		cout << "\n" << message;
-		cin.ignore();
-		cin.get();  
-	}
-
 
 }
