@@ -42,6 +42,7 @@ string FileNamePath = "ClientsDataBaseFile.txt";
 
 #pragma region Secondary Functions
 
+
 void ShowMainMenuScreen();
 
 
@@ -83,23 +84,7 @@ string ConvertClientToRecord(stClient NewClient, string Seprator = "#//#")
 }
 
 
-void PressAnyKeyToGetBackToMainMenu()
-{
-	cout << ("\n\nPress any key to go back to the Main Menu...\t");
-	system("pause > 0");
-
-	ShowMainMenuScreen();
-}
-
-
-#pragma endregion
-
-
-
-#pragma region Show All clients functions
-
-
-void AddClientListToVector()
+void AddClientsDataFromFileToClientsVector()
 {
 
 	vector <string> vRecords;
@@ -114,6 +99,74 @@ void AddClientListToVector()
 	}
 
 }
+
+
+void PressAnyKeyToGetBackToMainMenu()
+{
+	cout << ("\n\nPress any key to go back to the Main Menu...\t");
+	system("pause > 0");
+
+	ShowMainMenuScreen();
+}
+
+
+void ScreenHeader(string Header)
+{
+	system("cls");
+
+	cout << "\n=====================================\n";
+	cout << "\t  " << Header;
+	cout << "\n=====================================\n\n";
+}
+
+
+void PrintClientData(stClient NewClient)
+{
+	cout << "\n-----------------------------------\n";
+	cout << "Account number: ";
+	cout << NewClient.AccountNumber << "\n";
+
+	cout << "Pin code      : ";
+	cout << NewClient.PinCode << "\n";
+
+	cout << "Full Name     : ";
+	cout << NewClient.FullName << "\n";
+
+	cout << "Phone number  : ";
+	cout << NewClient.PhoneNumber << "\n";
+
+	cout << "Balance       : ";
+	cout << NewClient.Balance << "\n";
+	cout << "-----------------------------------\n\n";
+}
+
+
+bool IsClientExisted(string accountNumber, int& pos)
+{
+	AddClientsDataFromFileToClientsVector();
+
+	for (int i = 0; i < vClients.size(); i++)
+	{
+		if (vClients[i].AccountNumber == accountNumber)
+		{
+			pos = i;
+			return true;
+		}
+
+	}
+
+	pos = -1;
+	return false;
+}
+
+
+
+#pragma endregion
+
+
+
+#pragma region Show All clients functions
+
 
 
 void PrintClientTableHeader()
@@ -151,7 +204,7 @@ void PrintAllClientsRecords()
 void ShowClientsList()
 {
 	system("cls");
-	AddClientListToVector();
+	AddClientsDataFromFileToClientsVector();
 
 	PrintClientTableHeader();
 
@@ -172,10 +225,6 @@ stClient FillNewClientInfo()
 {
 	stClient NewClient;
 
-	cout << "\n================================\n";
-	cout << "\tNew Client Form";
-	cout << "\n================================\n\n";
-
 	NewClient.AccountNumber = ReadString("Enter the account number");
 
 	NewClient.PinCode = ReadString("Enter the pin code");
@@ -192,7 +241,7 @@ stClient FillNewClientInfo()
 
 void AddNewClient()
 {
-	system("cls");
+	ScreenHeader("New Client Form");
 
 	stClient NewClient;
 	string NewClientRecord;
@@ -226,6 +275,48 @@ void AddNewClient()
 
 
 
+#pragma region Exit function
+
+void ShowExitScreen()
+{
+	system("cls");
+
+	cout << "\n=============================\n";
+	cout << "   Program has ended!\n";
+	cout << "        Thank you\n";
+	cout << "=============================\n";
+
+}
+
+#pragma endregion
+
+
+
+
+
+void ShowFindClientByAccountNumberScreen()
+{
+	string AccountNumber;
+	int Pos = -99;
+
+	ScreenHeader("Search for a client");
+
+
+	AccountNumber = ReadString("Enter the client's account number");
+
+	if (IsClientExisted(AccountNumber,Pos))
+		PrintClientData(vClients[Pos]);
+	else
+		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
+
+	if (ReadAnswerYesOrNO("Do you want to search for another client [Y] [N] ?"))
+		ShowFindClientByAccountNumberScreen();
+	else
+		PressAnyKeyToGetBackToMainMenu();
+
+}
+
+
 #pragma region Main Menu Functions
 
 enMenuOptions ReadUserOption()
@@ -246,6 +337,13 @@ void ApplyUserOption(enMenuOptions Option)
 	case enMenuOptions::enShowClientList:
 		ShowClientsList();
 		break;
+	case enMenuOptions::enExit:
+		ShowExitScreen();
+		break;
+	case enMenuOptions::enFindClient:
+		ShowFindClientByAccountNumberScreen();
+		break;
+
 	}
 
 }
