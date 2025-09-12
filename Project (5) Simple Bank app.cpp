@@ -36,10 +36,6 @@ string FileNamePath = "ClientsDataBaseFile.txt";
 
 
 
-
-
-
-
 #pragma region Secondary Functions
 
 
@@ -91,6 +87,8 @@ void AddClientsDataFromFileToClientsVector()
 	stClient Client;
 
 	LoadDataFromFile(FileNamePath, vRecords);
+
+	::vClients.clear();
 
 	for (int i = 0; i < vRecords.size(); i++)
 	{
@@ -160,13 +158,24 @@ bool IsClientExisted(string accountNumber, int& pos)
 }
 
 
+void UpdateClientVectorWithDataAndPushToFile()
+{
+	vector<string> vData;
+
+	for (int i = 0; i < ::vClients.size(); i++)
+	{
+		vData.push_back(ConvertClientToRecord(vClients[i]));
+	}
+
+	RemoveAllFileDataAndRe_AddThem(FileNamePath, vData);
+}
+
 
 #pragma endregion
 
 
 
 #pragma region Show All clients functions
-
 
 
 void PrintClientTableHeader()
@@ -186,16 +195,23 @@ void PrintClientTableHeader()
 
 void PrintAllClientsRecords()
 {
-	for (int i = 0; i < vClients.size(); i++)
+	if (vClients.empty())
+		cout << "\n\t\t\t\t\t  [NO DATA AVAILABLE]\n" << "\t\t\t\t  The database is currently empty.\n";
+	else 
 	{
+		for (int i = 0; i < vClients.size(); i++)
+		{
 
-		cout << " | " << left << setw(15) << vClients[i].AccountNumber
-			<< " | " << left << setw(10) << vClients[i].PinCode
-			<< " | " << left << setw(30) << vClients[i].FullName
-			<< " | " << left << setw(15) << vClients[i].PhoneNumber
-			<< " | " << left << setw(10) << vClients[i].Balance
-			<< "\n";
+			cout << " | " << left << setw(15) << vClients[i].AccountNumber
+				<< " | " << left << setw(10) << vClients[i].PinCode
+				<< " | " << left << setw(30) << vClients[i].FullName
+				<< " | " << left << setw(15) << vClients[i].PhoneNumber
+				<< " | " << left << setw(10) << vClients[i].Balance
+				<< "\n";
+		}
 	}
+	
+
 
 	cout << "\n-----------------------------------------------------------------------------------------------------------\n\n";
 }
@@ -233,7 +249,7 @@ stClient FillNewClientInfo()
 
 	NewClient.PhoneNumber = ReadString("Enter the phone number");
 
-	NewClient.Balance = validateInputIsNumberfloat("Enter the balance amount");
+	NewClient.Balance = validateInputIsNumberfloat("Enter the balance amount:");
 
 	return NewClient;
 }
@@ -241,6 +257,7 @@ stClient FillNewClientInfo()
 
 void AddNewClient()
 {
+	int * y = new  int;
 	ScreenHeader("New Client Form");
 
 	stClient NewClient;
@@ -248,26 +265,41 @@ void AddNewClient()
 
 	NewClient = FillNewClientInfo();
 
-	NewClientRecord = ConvertClientToRecord(NewClient);
-
-	if (ReadAnswerYesOrNO("\nAre you sure you want to add it [Y] [N] ? "))
+	if (IsClientExisted(NewClient.AccountNumber, *y))
 	{
-		AddSingleRecordToFile(FileNamePath, NewClientRecord);
+		cout << "\n !! A client with account number ["
+			<< NewClient.AccountNumber
+			<< "] already exists in the system.\n";
+		cout << "Please try again with a different account number.\n";
+		delete y;
 
-		cout << "\nA new client has been added successfully! \n";
+		cout << "\n\n Press any key to re-enter a client...  ";
+		system("pause>0");
+		AddNewClient();
+	}
+	else
+	{
+		delete y;
+		NewClientRecord = ConvertClientToRecord(NewClient);
 
-
-		if (ReadAnswerYesOrNO("\nDo you want to add another client [Y] [N] ? "))
+		if (ReadAnswerYesOrNO("\nAre you sure you want to add it [Y] [N] ? "))
 		{
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			AddNewClient();
+			AddSingleRecordToFile(FileNamePath, NewClientRecord);
+
+			cout << "\nA new client has been added successfully! \n";
+
+
+			if (ReadAnswerYesOrNO("\nDo you want to add another client [Y] [N] ? "))
+			{
+				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				AddNewClient();
+			}
+			else
+				PressAnyKeyToGetBackToMainMenu();
 		}
 		else
 			PressAnyKeyToGetBackToMainMenu();
 	}
-	else
-		PressAnyKeyToGetBackToMainMenu();
-
 
 }
 
@@ -292,6 +324,7 @@ void ShowExitScreen()
 
 
 
+#pragma region Search for a client functions
 
 
 void ShowFindClientByAccountNumberScreen()
@@ -304,7 +337,7 @@ void ShowFindClientByAccountNumberScreen()
 
 	AccountNumber = ReadString("Enter the client's account number");
 
-	if (IsClientExisted(AccountNumber,Pos))
+	if (IsClientExisted(AccountNumber, Pos))
 		PrintClientData(vClients[Pos]);
 	else
 		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
@@ -315,6 +348,113 @@ void ShowFindClientByAccountNumberScreen()
 		PressAnyKeyToGetBackToMainMenu();
 
 }
+
+
+#pragma endregion
+
+
+
+#pragma region Delete an account functions
+
+
+void DeleteClientScreen()
+{
+	string AccountNumber;
+	int Pos = -99;
+
+	ScreenHeader("Delete account");
+
+	AccountNumber = ReadString("Enter the client's account number");
+
+	if (IsClientExisted(AccountNumber, Pos))
+	{
+		PrintClientData(vClients[Pos]);
+
+		if (ReadAnswerYesOrNO("Are you sure you want to delete this account [Y] [N] ?"))
+		{
+			vClients.erase(vClients.begin() + Pos);
+
+			UpdateClientVectorWithDataAndPushToFile();
+
+
+			cout << "\nThe account has been deleted successfully! \n";
+		}
+
+	}
+	else
+		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
+
+	if (ReadAnswerYesOrNO("Do you want to delete another account [Y] [N] ?"))
+		DeleteClientScreen();
+	else
+		PressAnyKeyToGetBackToMainMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Update Client info functions
+
+stClient UpdateClientInfo(string AccountNumber)
+{
+	stClient NewClient;
+
+	NewClient.AccountNumber = AccountNumber;
+
+	NewClient.PinCode = ReadString("Enter the pin code");
+
+	NewClient.FullName = ReadString("Enter the full name");
+
+	NewClient.PhoneNumber = ReadString("Enter the phone number");
+
+	NewClient.Balance = validateInputIsNumberfloat("Enter the balance amount");
+
+	return NewClient;
+}
+
+
+void UpdateClientScreen()
+{
+	string AccountNumber;
+	int Pos = -99;
+
+	ScreenHeader("Update account");
+
+	AccountNumber = ReadString("Enter the client's account number");
+
+	if (IsClientExisted(AccountNumber, Pos))
+	{
+		PrintClientData(vClients[Pos]);
+
+		if (ReadAnswerYesOrNO("Are you sure you want to update this account [Y] [N] ?"))
+		{
+
+			stClient UpdatedClient = UpdateClientInfo(AccountNumber);
+
+			vClients[Pos] = UpdatedClient;
+
+			UpdateClientVectorWithDataAndPushToFile();
+
+			cout << "\nThe account has been updated successfully! \n";
+		}
+
+	}
+	else
+		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
+
+	if (ReadAnswerYesOrNO("Do you want to update another account [Y] [N] ?"))
+		UpdateClientScreen();
+	else
+		PressAnyKeyToGetBackToMainMenu();
+
+}
+
+
+#pragma endregion
+
 
 
 #pragma region Main Menu Functions
@@ -342,6 +482,12 @@ void ApplyUserOption(enMenuOptions Option)
 		break;
 	case enMenuOptions::enFindClient:
 		ShowFindClientByAccountNumberScreen();
+		break;
+	case enMenuOptions::enDeleteClient:
+		DeleteClientScreen();
+		break;
+	case enMenuOptions::enUpdateClientInfo:
+		UpdateClientScreen();
 		break;
 
 	}
