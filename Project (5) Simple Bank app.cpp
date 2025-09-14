@@ -6,7 +6,7 @@ using namespace AllLibs;
 
 #pragma region enums, structs and Global variables
 
-enum enMenuOptions
+enum enMainMenuOptions
 {
 	enShowClientList = 1,
 	enAddNewClient = 2,
@@ -15,6 +15,14 @@ enum enMenuOptions
 	enFindClient = 5,
 	enTransactions = 6,
 	enExit = 7
+};
+
+enum enTransactionMenuOptions
+{
+	enDeposit = 1,
+	enWithdraw = 2,
+	enTotalBalances = 3,
+	enMainMenu = 4,
 };
 
 struct stClient
@@ -41,6 +49,9 @@ string FileNamePath = "ClientsDataBaseFile.txt";
 
 
 void ShowMainMenuScreen();
+
+
+void ShowTransactionMenu();
 
 
 stClient ConvertRecordToClient(string Record)
@@ -102,10 +113,19 @@ void AddClientsDataFromFileToClientsVector()
 
 void PressAnyKeyToGetBackToMainMenu()
 {
-	cout << ("\n\nPress any key to go back to the Main Menu...\t");
+	cout << ("\n\nPress any key to go back to Main Menu...\t");
 	system("pause > 0");
 
 	ShowMainMenuScreen();
+}
+
+
+void PressAnyKeyToGetBackToTransactionMenu()
+{
+	cout << ("\n\nPress any key to go back to Transaction Menu...\t");
+	system("pause > 0");
+
+	ShowTransactionMenu();
 }
 
 
@@ -272,6 +292,7 @@ void AddNewClient()
 	{
 		system("cls");
 		system("color 4F");
+		cout << "\a" << endl;
 
 		cout << "\n !!!!!! A client with account number ["
 			<< ClientAccountNumber
@@ -394,7 +415,6 @@ void DeleteClientScreen()
 	else
 		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
 
-	system("cls");
 	if (ReadAnswerYesOrNO("Do you want to delete another account [Y] [N] ?"))
 		DeleteClientScreen();
 	else
@@ -408,6 +428,7 @@ void DeleteClientScreen()
 
 
 #pragma region Update Client info functions
+
 
 stClient UpdateClientInfo(string AccountNumber)
 {
@@ -456,7 +477,7 @@ void UpdateClientScreen()
 	else
 		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
 
-	system("cls");
+
 	if (ReadAnswerYesOrNO("Do you want to update another account [Y] [N] ?"))
 		UpdateClientScreen();
 	else
@@ -469,9 +490,203 @@ void UpdateClientScreen()
 
 
 
-#pragma region Main Menu Functions
+#pragma region Transactions functions
 
-int ReadUserOptionFromMenuList(string message,int FirstOptionNumber, int LastOptionNumber)
+
+
+#pragma region Show All balances functions
+
+
+void PrintClientTableHeaderTR()
+{
+	cout << "--------------------------------------------------------------------------------------------------------\n\n";
+
+	cout << " | " << left << setw(20) << "Account Number"
+		<< " | " << left << setw(30) << "Client Name"
+		<< " | " << left << setw(10) << "Balance"
+		<< " \n\n";
+
+	cout << "--------------------------------------------------------------------------------------------------------\n";
+}
+
+
+void PrintAllBalancesRecordsTR()
+{
+	if (vClients.empty())
+		cout << "\n\t\t\t\t\t  [NO DATA AVAILABLE]\n" << "\t\t\t\t  The database is currently empty.\n";
+	else
+	{
+		for (int i = 0; i < vClients.size(); i++)
+		{
+
+			cout << " | " << left << setw(20) << vClients[i].AccountNumber
+				<< " | " << left << setw(30) << vClients[i].FullName
+				<< " | " << left << setw(10) << vClients[i].Balance
+				<< "\n";
+		}
+	}
+
+
+	cout << "\n-----------------------------------------------------------------------------------------------------------\n\n";
+}
+
+
+void ShowTotalBalancesTR()
+{
+	int SumTotalBalances = 0;
+
+	for (stClient &C : vClients)
+	{
+		SumTotalBalances += C.Balance;
+	}
+
+	cout << "\t\t\t\t\t\t\tTotal Balances = " << SumTotalBalances << "\n\n";
+}
+
+
+void ShowClientsBalancesListTR()
+{
+	system("cls");
+
+	AddClientsDataFromFileToClientsVector();
+
+	PrintClientTableHeaderTR();
+
+
+	PrintAllBalancesRecordsTR();
+
+	ShowTotalBalancesTR();
+
+	PressAnyKeyToGetBackToTransactionMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Deposit functions
+
+
+void AddDepositeToAccount()
+{
+	ScreenHeader("Deposit Screen");
+
+	string AccountNumber;
+	int Pos = -99;
+	double DepositAmount;
+
+	AccountNumber = ReadString("Enter the account number");
+
+	if (IsClientExisted(AccountNumber, Pos))
+	{
+		PrintClientData(vClients[Pos]);
+
+		DepositAmount = validateInputIsNumberfloat("Enter the deposit amount? ");
+
+		if (ReadAnswerYesOrNO("\nAre you sure you want to perform this transaction [Y] [N] ?"))
+		{
+
+			vClients[Pos].Balance += DepositAmount;
+
+			UpdateClientVectorWithDataAndPushToFile();
+
+			cout << "\nDeposit completed successfully.\n";
+			cout << "New Balance: $" << vClients[Pos].Balance << "\n\n";
+		}
+
+	}
+	else
+		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
+
+}
+
+
+void ShowDepositeScreenTR()
+{
+	do
+	{
+		AddDepositeToAccount();
+
+	} while (ReadAnswerYesOrNO("Do you want add another deposit [Y] [N] ?"));
+
+	PressAnyKeyToGetBackToTransactionMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Withdraw functions
+
+
+void WithdrawFromAccount()
+{
+	ScreenHeader("Withdraw Screen");
+
+	string AccountNumber;
+	int Pos = -99;
+	double WithDrawAmount;
+
+	AccountNumber = ReadString("Enter the account number");
+
+	if (IsClientExisted(AccountNumber, Pos))
+	{
+		PrintClientData(vClients[Pos]);
+
+
+		WithDrawAmount = validateInputIsNumberfloat("Enter the withdrawl amount? ");
+
+
+		while (WithDrawAmount > vClients[Pos].Balance)
+		{
+			cout << "\n\nAmount exceeds the balance, you can withdraw up to " << vClients[Pos].Balance << "\n\n";
+			WithDrawAmount = validateInputIsNumberfloat("Try another amount? ");
+		}
+
+
+		if (ReadAnswerYesOrNO("\nAre you sure you want to perform this transaction [Y] [N] ?"))
+		{
+			vClients[Pos].Balance -= WithDrawAmount;
+
+			UpdateClientVectorWithDataAndPushToFile();
+
+			cout << "\nWithdrawal completed successfully.\n";
+			cout << "New Balance: $" << vClients[Pos].Balance << "\n\n";
+		}
+
+	}
+	else
+		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
+
+}
+
+
+
+void ShowWithDrawScreenTR()
+{
+	do
+	{
+		WithdrawFromAccount();
+
+	} while (ReadAnswerYesOrNO("\nDo you want to withdraw again [Y] [N] ?"));
+
+	PressAnyKeyToGetBackToTransactionMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Transaction Menu Functions
+
+
+int ReadUserOptionFromMenuList(string message, int FirstOptionNumber, int LastOptionNumber)
 {
 	int Option = ReadNumberInRange(message, FirstOptionNumber, LastOptionNumber);
 
@@ -479,27 +694,80 @@ int ReadUserOptionFromMenuList(string message,int FirstOptionNumber, int LastOpt
 }
 
 
-void ApplyUserOption(enMenuOptions Option)
+void ApplyUserTransactions(enTransactionMenuOptions Transaction)
+{
+	switch (Transaction)
+	{
+	case enTransactionMenuOptions::enMainMenu:
+		ShowMainMenuScreen();
+		break;
+	case enTransactionMenuOptions::enTotalBalances:
+		ShowClientsBalancesListTR();
+		break;
+	case enTransactionMenuOptions::enDeposit:
+		ShowDepositeScreenTR();
+		break;
+	case enTransactionMenuOptions::enWithdraw:
+		ShowWithDrawScreenTR();
+		break;
+
+	}
+
+}
+
+
+void ShowTransactionMenu()
+{
+	system("cls");
+	cout << "========================================================";
+	cout << "\n\t\t  Transactions Menu Screen \n";
+	cout << "========================================================\n";
+
+	cout << "\t\t[1] Deposit  \n";
+	cout << "\t\t[2] Withdraw \n";
+	cout << "\t\t[3] Total balances \n";
+	cout << "\t\t[4] Main menu \n";
+
+
+	cout << "========================================================\n";
+
+	ApplyUserTransactions((enTransactionMenuOptions)ReadUserOptionFromMenuList("What do you want to do? Choose an option [1 to 4]? ", 1, 4));
+}
+
+
+#pragma endregion
+
+
+#pragma endregion
+
+
+
+#pragma region Main Menu Functions
+
+void ApplyUserOption(enMainMenuOptions Option)
 {
 	switch (Option)
 	{
-	case enMenuOptions::enAddNewClient:
+	case enMainMenuOptions::enAddNewClient:
 		AddNewClient();
 		break;
-	case enMenuOptions::enShowClientList:
+	case enMainMenuOptions::enShowClientList:
 		ShowClientsList();
 		break;
-	case enMenuOptions::enExit:
+	case enMainMenuOptions::enExit:
 		ShowExitScreen();
 		break;
-	case enMenuOptions::enFindClient:
+	case enMainMenuOptions::enFindClient:
 		ShowFindClientByAccountNumberScreen();
 		break;
-	case enMenuOptions::enDeleteClient:
+	case enMainMenuOptions::enDeleteClient:
 		DeleteClientScreen();
 		break;
-	case enMenuOptions::enUpdateClientInfo:
+	case enMainMenuOptions::enUpdateClientInfo:
 		UpdateClientScreen();
+		break;
+	case enMainMenuOptions::enTransactions:
+		ShowTransactionMenu();
 		break;
 
 	}
@@ -524,11 +792,12 @@ void ShowMainMenuScreen()
 
 	cout << "========================================================\n";
 
-	ApplyUserOption((enMenuOptions)ReadUserOptionFromMenuList("What do you want to do? Choose an option [1 to 7]? ",1,7));
+	ApplyUserOption((enMainMenuOptions)ReadUserOptionFromMenuList("What do you want to do? Choose an option [1 to 7]? ",1,7));
 }
 
 
 #pragma endregion
+
 
 
 
