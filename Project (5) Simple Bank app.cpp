@@ -13,7 +13,8 @@ enum enMenuOptions
 	enDeleteClient = 3,
 	enUpdateClientInfo = 4,
 	enFindClient = 5,
-	enExit = 6
+	enTransactions = 6,
+	enExit = 7
 };
 
 struct stClient
@@ -237,11 +238,11 @@ void ShowClientsList()
 
 #pragma region Add a new client functions
 
-stClient FillNewClientInfo()
+stClient FillNewClientInfo(string AccountNumber)
 {
 	stClient NewClient;
 
-	NewClient.AccountNumber = ReadString("Enter the account number");
+	NewClient.AccountNumber = AccountNumber;
 
 	NewClient.PinCode = ReadString("Enter the pin code");
 
@@ -257,19 +258,25 @@ stClient FillNewClientInfo()
 
 void AddNewClient()
 {
+	system("color 0F");
 	int * y = new  int;
 	ScreenHeader("New Client Form");
 
 	stClient NewClient;
 	string NewClientRecord;
 
-	NewClient = FillNewClientInfo();
+	string ClientAccountNumber = ReadString("Enter the account number");
 
-	if (IsClientExisted(NewClient.AccountNumber, *y))
+
+	if (IsClientExisted(ClientAccountNumber, *y))
 	{
-		cout << "\n !! A client with account number ["
-			<< NewClient.AccountNumber
+		system("cls");
+		system("color 4F");
+
+		cout << "\n !!!!!! A client with account number ["
+			<< ClientAccountNumber
 			<< "] already exists in the system.\n";
+
 		cout << "Please try again with a different account number.\n";
 		delete y;
 
@@ -280,6 +287,9 @@ void AddNewClient()
 	else
 	{
 		delete y;
+
+		NewClient = FillNewClientInfo(ClientAccountNumber);
+
 		NewClientRecord = ConvertClientToRecord(NewClient);
 
 		if (ReadAnswerYesOrNO("\nAre you sure you want to add it [Y] [N] ? "))
@@ -384,6 +394,7 @@ void DeleteClientScreen()
 	else
 		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
 
+	system("cls");
 	if (ReadAnswerYesOrNO("Do you want to delete another account [Y] [N] ?"))
 		DeleteClientScreen();
 	else
@@ -445,6 +456,7 @@ void UpdateClientScreen()
 	else
 		cout << "\nUnfortunately, this account number does not exist in our system!\n\n";
 
+	system("cls");
 	if (ReadAnswerYesOrNO("Do you want to update another account [Y] [N] ?"))
 		UpdateClientScreen();
 	else
@@ -459,11 +471,11 @@ void UpdateClientScreen()
 
 #pragma region Main Menu Functions
 
-enMenuOptions ReadUserOption()
+int ReadUserOptionFromMenuList(string message,int FirstOptionNumber, int LastOptionNumber)
 {
-	int Option = ReadNumberInRange("What do you want to do? Choose an option [1 to 6]? ", 1, 6);
+	int Option = ReadNumberInRange(message, FirstOptionNumber, LastOptionNumber);
 
-	return (enMenuOptions)Option;
+	return Option;
 }
 
 
@@ -507,11 +519,12 @@ void ShowMainMenuScreen()
 	cout << "\t\t[3] Delete clients \n";
 	cout << "\t\t[4] Update clients info \n";
 	cout << "\t\t[5] Search for a client \n";
-	cout << "\t\t[6] Exit \n";
+	cout << "\t\t[6] Transactions \n";
+	cout << "\t\t[7] Exit \n";
 
 	cout << "========================================================\n";
 
-	ApplyUserOption(ReadUserOption());
+	ApplyUserOption((enMenuOptions)ReadUserOptionFromMenuList("What do you want to do? Choose an option [1 to 7]? ",1,7));
 }
 
 
@@ -524,7 +537,6 @@ void ShowMainMenuScreen()
 
 int main()
 {
-	cout << "Hey";
 	ShowMainMenuScreen();
 }
  
