@@ -95,6 +95,8 @@ void ShowLoginScreen();
 
 void ShowTransactionMenu();
 
+void ShowManageUsersScreen();
+
 
 stClient ConvertRecordToClient(string Record)
 {
@@ -151,6 +153,7 @@ void AddClientsDataFromFileToClientsVector()
 	}
 
 }
+
 
 
 string ConvertUserToRecord(stUser NewUser, string Seprator = "#//#")
@@ -216,6 +219,23 @@ void UpdateUsersVectorWithDataAndPushToFile()
 }
 
 
+void PrintUserData(stUser NewUser)
+{
+	cout << "\n-----------------------------------\n";
+	cout << "Username    : ";
+	cout << NewUser.UserName << "\n";
+
+	cout << "Password    : ";
+	cout << NewUser.Password << "\n";
+
+	cout << "Permissions : ";
+	cout << NewUser.Permissions << "\n";
+
+
+	cout << "-----------------------------------\n\n";
+}
+
+
 bool IsUserExisted(string UserName, int& pos)
 {
 	AddUsersDataFromFileToUsersVector();
@@ -241,6 +261,15 @@ void PressAnyKeyToGetBackToMainMenu()
 	system("pause > 0");
 
 	ShowMainMenuScreen();
+}
+
+
+void PressAnyKeyToGetBackToManageUsersMenu()
+{
+	cout << ("\n\nPress any key to go back to the Manage Users Menu...\t");
+	system("pause > 0");
+
+	ShowManageUsersScreen();
 }
 
 
@@ -877,7 +906,315 @@ void ShowTransactionMenu()
 #pragma region Manage users functions
 
 
+#pragma region Show Users List functions
 
+
+void PrintUserTableHeader()
+{
+	cout << "--------------------------------------------------------------------------------------------------------\n\n";
+
+	cout << " | " << left << setw(15) << "User Name"
+		<< " | " << left << setw(10) << "Password"
+		<< " | " << left << setw(30) << "Permissions"
+		<< " \n\n";
+
+	cout << "--------------------------------------------------------------------------------------------------------\n";
+}
+
+
+void PrintAllUsersRecords()
+{
+	if (vUsers.empty())
+		cout << "\n\t\t\t\t\t  [NO DATA AVAILABLE]\n" << "\t\t\t\t  The database is currently empty.\n";
+	else
+	{
+		for (int i = 0; i < vUsers.size(); i++)
+		{
+
+			cout << " | " << left << setw(15) << vUsers[i].UserName
+				<< " | " << left << setw(10) << vUsers[i].Password
+				<< " | " << left << setw(30) << vUsers[i].Permissions
+
+				<< "\n";
+		}
+	}
+
+
+
+	cout << "\n-----------------------------------------------------------------------------------------------------------\n\n";
+}
+
+
+void ShowUsersList()
+{
+	system("cls");
+	AddUsersDataFromFileToUsersVector();
+
+	PrintUserTableHeader();
+
+
+	PrintAllUsersRecords();
+
+	PressAnyKeyToGetBackToManageUsersMenu();
+
+}
+
+#pragma endregion
+
+
+
+#pragma region Add a new user functions
+
+short SetUserPermission()
+{
+	short Permissions;
+	if (ReadAnswerYesOrNO("Do you want to give full access? Y/N?"))
+		Permissions = -1;
+	else
+	{
+		Permissions = 0;
+		cout << "\nDo you want to give access to:\n";
+
+		if (ReadAnswerYesOrNO("Show all clients? Y/N?"))
+			Permissions += 1;
+		if (ReadAnswerYesOrNO("Add new client? Y/N?"))
+			Permissions += 2;
+		if (ReadAnswerYesOrNO("Delete client? Y/N?"))
+			Permissions += 4;
+		if (ReadAnswerYesOrNO("Update client? Y/N?"))
+			Permissions += 8;
+		if (ReadAnswerYesOrNO("Find client? Y/N?"))
+			Permissions += 16;
+		if (ReadAnswerYesOrNO("Transactions? Y/N?"))
+			Permissions += 32;
+		if (ReadAnswerYesOrNO("Manage Userss? Y/N?"))
+			Permissions += 64;
+	}
+
+	return Permissions;
+}
+
+
+stUser FillNewUserInfo(string UserName)
+{
+	stUser NewUser;
+
+	NewUser.UserName = UserName;
+
+	NewUser.Password = ReadString("Enter the password ");
+
+	NewUser.Permissions = SetUserPermission();
+
+
+	return NewUser;
+}
+
+
+void AddNewUser()
+{
+	system("color 0F");
+	int* y = new  int;
+	ScreenHeader("New User Form");
+
+	stUser NewUser;
+	string NewUserRecord;
+
+	string UserName = ReadString("Enter the user name");
+
+
+	if (IsUserExisted(UserName, *y))
+	{
+		system("cls");
+		system("color 4F");
+		cout << "\a" << endl;
+
+		cout << "\n !!!!!! An User with user name ["
+			<< UserName
+			<< "] already exists in the system.\n";
+
+		cout << "Please try again with a different username.\n";
+		delete y;
+
+		cout << "\n\n Press any key to re-enter an user...  ";
+		system("pause>0");
+		AddNewUser();
+	}
+	else
+	{
+		delete y;
+
+		NewUser = FillNewUserInfo(UserName);
+
+		NewUserRecord = ConvertUserToRecord(NewUser);
+
+		if (ReadAnswerYesOrNO("\nAre you sure you want to add it [Y] [N] ? "))
+		{
+			AddSingleRecordToFile(FileNamePathForUsers, NewUserRecord);
+
+			cout << "\nA new user has been added successfully! \n";
+
+
+			if (ReadAnswerYesOrNO("\nDo you want to add another user [Y] [N] ? "))
+			{
+				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				AddNewUser();
+			}
+			else
+				PressAnyKeyToGetBackToManageUsersMenu();
+		}
+		else
+			PressAnyKeyToGetBackToManageUsersMenu();
+	}
+
+}
+
+#pragma endregion
+
+
+
+#pragma region Delete an user functions
+
+
+void DeleteUserScreen()
+{
+	string UserName;
+	int Pos = -99;
+
+	ScreenHeader("Delete User");
+
+	UserName = ReadString("Enter the username");
+
+	if (UserName == "Admin")
+	{
+		cout << "\n\n!!! This user can NOT be removed from the system !!!\n\n";
+
+		PressAnyKeyToGetBackToManageUsersMenu();
+	}
+
+	if (IsUserExisted(UserName, Pos))
+	{
+		PrintUserData(vUsers[Pos]);
+
+		if (ReadAnswerYesOrNO("Are you sure you want to delete this user [Y] [N] ?"))
+		{
+			vUsers.erase(vUsers.begin() + Pos);
+
+			UpdateUsersVectorWithDataAndPushToFile();
+
+
+			cout << "\nThe user has been deleted successfully! \n";
+		}
+
+	}
+	else
+		cout << "\nUnfortunately, this username does not exist in our system!\n\n";
+
+	if (ReadAnswerYesOrNO("Do you want to delete another user [Y] [N] ?"))
+		DeleteUserScreen();
+	else
+		PressAnyKeyToGetBackToManageUsersMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Update user info functions
+
+
+stUser UpdateUserInfo()
+{
+	stUser NewUser;
+
+	NewUser.UserName = ReadString("Enter the username");
+
+	NewUser.Password = ReadString("Enter the password");
+
+	NewUser.Permissions = SetUserPermission();
+
+	return NewUser;
+}
+
+
+void UpdateUserInfoScreen()
+{
+	string UserName;
+	int Pos = -99;
+
+	ScreenHeader("Update User");
+
+	UserName = ReadString("Enter the username");
+
+	if (UserName == "Admin")
+	{
+		cout << "\n\n!!! This user can NOT be modified !!!\n\n";
+
+		PressAnyKeyToGetBackToManageUsersMenu();
+	}
+
+	if (IsUserExisted(UserName, Pos))
+	{
+		PrintUserData(vUsers[Pos]);
+
+		if (ReadAnswerYesOrNO("Are you sure you want to update this user [Y] [N] ?"))
+		{
+
+			vUsers[Pos] = UpdateUserInfo();
+			UpdateUsersVectorWithDataAndPushToFile();
+
+
+			cout << "\nThe user has been updated successfully! \n";
+		}
+
+	}
+	else
+		cout << "\nUnfortunately, this username does not exist in our system!\n\n";
+
+	if (ReadAnswerYesOrNO("Do you want to update another user [Y] [N] ?"))
+		UpdateUserInfoScreen();
+	else
+		PressAnyKeyToGetBackToManageUsersMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Search for a user
+
+
+void ShowFindUserByUserNameScreen()
+{
+	string UserName;
+	int Pos = -99;
+
+	ScreenHeader("Search for a user");
+
+
+	UserName = ReadString("Enter the username");
+
+	if (IsUserExisted(UserName, Pos))
+		PrintUserData(vUsers[Pos]);
+	else
+		cout << "\nUnfortunately, this username does not exist in our system!\n\n";
+
+	if (ReadAnswerYesOrNO("Do you want to search for another user [Y] [N] ?"))
+		ShowFindUserByUserNameScreen();
+	else
+		PressAnyKeyToGetBackToManageUsersMenu();
+
+}
+
+
+#pragma endregion
+
+
+
+#pragma region Manage users menu functions
 
 
 void ApplyManageUserOption(enManageUsersMenuOptions Option)
@@ -886,6 +1223,21 @@ void ApplyManageUserOption(enManageUsersMenuOptions Option)
 	{
 	case enManageUsersMenuOptions::enMainMenuOp:
 		ShowMainMenuScreen();
+		break;
+	case enManageUsersMenuOptions::enListUsers:
+		ShowUsersList();
+		break;
+	case enManageUsersMenuOptions::enAddNewUser:
+		AddNewUser();
+		break;
+	case enManageUsersMenuOptions::enDeleteUser:
+		DeleteUserScreen();
+		break;
+	case enManageUsersMenuOptions::enUpdateUserInfo:
+		UpdateUserInfoScreen();
+		break;
+	case enManageUsersMenuOptions::enFindUser:
+		ShowFindUserByUserNameScreen();
 		break;
 
 	}
@@ -902,7 +1254,7 @@ void ShowManageUsersScreen()
 
 	cout << "\t\t[1] List Users  \n";
 	cout << "\t\t[2] Add a new user \n";
-	cout << "\t\t[3] Delete Users \n";
+	cout << "\t\t[3] Delete User \n";
 	cout << "\t\t[4] Update user info \n";
 	cout << "\t\t[5] find user \n";
 	cout << "\t\t[6] Main Menu \n";
@@ -911,6 +1263,10 @@ void ShowManageUsersScreen()
 
 	ApplyManageUserOption((enManageUsersMenuOptions)ReadUserOptionFromMenuList("What do you want to do? Choose an option [1 to 6]? ", 1, 6));
 }
+
+
+#pragma endregion
+
 
 
 #pragma endregion
